@@ -55,8 +55,12 @@
                     stage = new PIXI.Container();
                     
                     // Create the sprites
+                    const particleContainer = document.getElementById('particleToggle').checked;
+                    
                     let count = parseInt(document.getElementById('spriteCount').value, 10);
-                    let spriteContainer = new PIXI.particles.ParticleContainer(count);
+                    let spriteContainer = particleContainer
+                        ? new PIXI.particles.ParticleContainer(count)
+                        : new PIXI.Container();
                     
                     for (let i = 0; i < count; i++) {
                         let sprite = PIXI.Sprite.from(bunnyTexture);
@@ -140,10 +144,17 @@
     
     <body>
         <canvas id="canvas" width=800 height=600></canvas>
-        <br />
-        <label>Sprites</label>
-        <input id="spriteCount"></input>
-        <button id="startWebGL">WebGL</button>
-        <button id="startCanvas">Canvas</button>
+        <p>
+            <label>Sprites</label>
+            <input id="spriteCount"></input>
+        </p>
+        <p>
+            <label>Use ParticleContainer</label>
+            <input id="particleToggle" type="checkbox"></input>
+        </p>
+        <p>
+            <button id="startWebGL">WebGL</button>
+            <button id="startCanvas">Canvas</button>
+        </p>
     </body>
 </html>
