@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Pixi Benchmark</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.5.1/pixi.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+        
+        <style type="text/css">
+            .stats {
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+        </style>
+        
+        <script type="text/javascript">
+            window.addEventListener('load', () => {
+                const gravity = 100;
+                const width = 800;
+                const height = 600;
+                
+                let renderer;
+                let stage;
+                let sprites = [];
+                let isinit = false;
+                
+                // Setup stats
+                const stats = new Stats();
+                stats.showPanel(0);
+                stats.domElement.className = 'stats';
+                document.body.appendChild(stats.domElement);
+                
+                // Init a renderer
+                const bunnysTexture = PIXI.Texture.fromImage("bunnys.png");
+                const bunnyTexture = new PIXI.Texture(bunnysTexture.baseTexture, new PIXI.math.Rectangle(2, 47, 26, 37));
+                
+                function initRenderer(webgl) {
+                    // I could probably fix this, but it's fine for a simple test
+                    if (isinit) {
+                        alert('Please refresh the page before initializing a new renderer');
+                        return;
+                    }
+                    
+                    isinit = true;
+                    
+                    // Create the renderer
+                    let Renderer = webgl ? PIXI.WebGLRenderer : PIXI.CanvasRenderer;
+                    
+                    renderer = new Renderer({
+                        width: width,
+                        height: height,
+                        view: document.getElementById('canvas')
+                    });
+                    
+                    stage = new PIXI.Container();
+                    
+                    // Create the sprites
+                    let count = parseInt(document.getElementById('spriteCount').value, 10);
+                    let spriteContainer = new PIXI.particles.ParticleContainer(count);
+                    
+                    for (let i = 0; i < count; i++) {
+                        let sprite = PIXI.Sprite.from(bunnyTexture);
+                        
+                        sprite.anchor.set(0.5, 0.5);
+                        
+                        sprite.x = Math.random() * renderer.width;
+                        sprite.y = Math.random() * renderer.height;
+                        
+                        sprite.vx = (Math.random() - 0.5) * 30;
+                        sprite.vy = (Math.random() - 0.5) * 30;
+                        
+                        sprites.push(sprite);
+                        spriteContainer.addChild(sprite);
+                    }
+                    
+                    stage.addChild(spriteContainer);
+                    
+                    t = Date.now();
+                    requestAnimationFrame(animate);
+                }
+                
+                document.getElementById('startWebGL').addEventListener('click', () => {
+                    initRenderer(true);
+                });
+                
+                document.getElementById('startCanvas').addEventListener('click', () => {
+                    initRenderer(false);
+                });
+                
+                // Animation loop
+                let t;
+                function animate() {
+                	stats.begin();
+                	
+                    // delta-time
+                    const now = Date.now();
+                    const dt = (now - t) / 1000;
+                    t = now;
+                    
+                    // Update "physics"
+                    sprites.forEach((sprite) => {
+                        let bounceX = false;
+                        let bounceY = false;
+                        
+                        sprite.vy += gravity * dt;
+                        
+                        sprite.x += sprite.vx * dt;
+                        sprite.y += sprite.vy * dt;
+                        
+                        if (sprite.x < 0) {
+                            sprite.x = 0;
+                            bounceX = true;
+                        }
+                        else if (sprite.x > width) {
+                            sprite.x = width;
+                            bounceX = true;
+                        }
+                        
+                        if (sprite.y < 0) {
+                            sprite.y = 0;
+                            bounceY = true;
+                        }
+                        else if (sprite.y > height) {
+                            sprite.y = height;
+                            bounceY = true;
+                        }
+                        
+                        if (bounceX) sprite.vx *= -1;
+                        if (bounceY) sprite.vy *= -1;
+                    });
+                
+                	renderer.render(stage);
+                
+                	stats.end();
+                	requestAnimationFrame(animate);
+                }
+            });
+        </script>
+    </head>
+    
+    <body>
+        <canvas id="canvas" width=800 height=600></canvas>
+        <br />
+        <label>Sprites</label>
+        <input id="spriteCount"></input>
+        <button id="startWebGL">WebGL</button>
+        <button id="startCanvas">Canvas</button>
+    </body>
+</html>
